@@ -8,19 +8,22 @@
 [![Vue](https://img.shields.io/badge/Vue-3.4-4FC08D?logo=vuedotjs)](https://vuejs.org/)
 [![Three.js](https://img.shields.io/badge/Three.js-v0.170-black?logo=threedotjs)](https://threejs.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi)](https://fastapi.tiangolo.com/)
+[![DeepSeek](https://img.shields.io/badge/LLM-DeepSeek--V3.1-4D6BFE)](https://aiping.cn/)
 [![EMQX](https://img.shields.io/badge/EMQX-MQTT_Broker-00E4A0?logo=mqtt)](https://www.emqx.com/)
 [![ESP32](https://img.shields.io/badge/ESP32--S3-MicroPython-00979D?logo=espressif)](https://www.espressif.com/)
-[![License](https://img.shields.io/badge/License-MIT-green)](./LICENSE)
+[![SQLite](https://img.shields.io/badge/SQLite-审计链-003B57?logo=sqlite)](https://www.sqlite.org/)
 
 ---
 
 ## 📖 项目简介
 
-**深渊哨兵**是一套面向城市防汛与边坡地质灾害场景的 **AI 数字孪生预警系统**。
+**深渊哨兵**是一套基于大模型 Agent 与数字孪生技术的城市内涝与边坡灾害 AI 预警系统。
 
-传统防汛系统在水位超警戒线后才被动报警——此时水已淹、损失已发生。深渊哨兵的核心创新在于 **"不等灾害发生，在暴雨前兆阶段由 AI 主动推演并提前执行预防措施"**。
+传统防汛系统在水位超警戒线后才被动报警——此时水已淹、损失已发生。深渊哨兵的核心创新在于 **"不等灾害发生，在暴雨前兆阶段由 AI 主动推演灾害链并提前执行预防措施"**，实现"灾害链超前阻断"，为城市韧性基础设施建设提供 AI 大脑。
 
-系统通过工业级 RS485 传感器实时采集气象（8项）与土壤（4项）数据，经 MQTT 消息中间件传输至 AI 决策后端。后端由规则引擎（毫秒级快速判断）+ ChromaDB 国标知识库（RAG 向量检索）+ 通义千问大模型（灾害链推演 + Function Calling 自动排水决策）组成三级智能。分析结果驱动 Three.js 3D 下凹立交桥城市数字孪生场景实时联动，并通过 ESP32 继电器实现物理层面的排水执行。
+系统感知层基于标准 MQTT 物联网协议，已完成工业级 RS485 气象/土壤传感器与 ESP32 执行终端的全链路开发，任何遵循该协议的传感设备均可即插即用；上层结合 RAG（检索增强生成）技术让大模型像防汛专家一样进行灾害链推演，并在灾害发生前于 3D 数字孪生大屏中执行预排空等干预指令。本仓库演示通过注入与真实硬件完全同构的传感器数据流，完整呈现 **"感知 → 规则判级 → RAG 检索 → AI 推演 → 决策执行 → 审计留痕"** 全流程。
+
+> 🚀 **快速上手请看 [RUN.md](RUN.md) —— 完整启动/演示/排障手册**
 
 ---
 
@@ -37,8 +40,9 @@
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│ 第一层：感知层（硬件）                                     │
-│   RS485 Modbus RTU → ESP32-S3 → WiFi → MQTT              │
+│ 第一层：感知层（硬件 / 数据注入器）                         │
+│   RS485 Modbus RTU → ESP32-S3 → WiFi → MQTT             │
+│   （注入器 test_inject.py 走完全相同的协议与数据格式）      │
 ├─────────────────────────────────────────────────────────┤
 │ 第二层：消息层（EMQX）                                     │
 │   4个Topic：sensor_data / commands / ai_analysis / status│
@@ -47,6 +51,7 @@
 │   Python FastAPI      │   Vue3 + Three.js + ECharts      │
 │   规则引擎+RAG+LLM    │   MQTT.js WebSocket               │
 │   ChromaDB 知识库     │   3D下凹立交 + 悬浮卡片 + 趋势图   │
+│   SQLite 预警审计链   │                                  │
 └──────────────────────┴──────────────────────────────────┘
 ```
 
@@ -63,34 +68,41 @@
 - 🧠 **AI 推演终端** — 5 段结构化输出（数据解读/灾害链推演/国标依据/风险评级/决策说明）
 - 🎚️ **风险仪表盘** — NORMAL→WATCH→WARNING→CRITICAL 四色升级，紧急时红色闪烁
 - 📨 **MQTT 实时通信** — EMQX 本地 Broker，4 个 Topic，QoS 1 可靠传输
-- ⚡ **规则引擎** — 12 条硬阈值规则，毫秒级快速判断
-- 📚 **RAG 国标知识库** — GB51174-2017 + GB50330-2013 向量检索
-- 🔌 **硬件控制** — AI 决策自动下发排水指令，ESP32 继电器物理执行
+- ⚡ **规则引擎** — 毫秒级快速判断，AI 不可用时自动降级兜底
+- 📚 **RAG 国标知识库** — GB51174-2017 + GB50330-2013 向量检索（ChromaDB 255 条切片）
+- 🔌 **硬件控制** — AI 决策经 Function Calling 自动下发排水指令，ESP32 继电器物理执行
+- 🗄️ **预警审计链** — SQLite 持久化 4 张表：传感器时序 / 风险事件 / AI 推演全文 / 控制指令，每次预警可追溯、可复盘
 
 ### 辅助功能
 
-- 🎬 **一键演示** — 5 阶段全自动灾害链推演（约 60 秒）
+- 🎬 **一键演示** — 5 阶段全自动灾害链推演（断网/API 故障时的保底演示）
 - 🕹️ **数据模拟器** — 滑块手动调整传感器参数
 - 📊 **历史趋势图** — ECharts 实时绘制气压/土壤湿度曲线
 - 💧 **积水深度显示** — 底部悬浮卡片，颜色状态（绿/黄/红）
 - 🔧 **MQTT 注入器** — 批量推送极端数据，脱离硬件独立验证
+- 📡 **历史查询 API** — 降采样时序查询 / 事件链 / 推演记录 / 指令审计 / 统计摘要
 
 ---
 
 ## 📦 技术栈
 
-| 层                   | 技术                                   | 版本             |
-| -------------------- | -------------------------------------- | ---------------- |
-| **硬件主控**   | ESP32-S3 (行空板 K10) MicroPython      | v1.28            |
-| **传感器通信** | RS485 Modbus RTU, CRC16                | 9600bps          |
-| **消息中间件** | EMQX MQTT Broker                       | latest           |
-| **后端框架**   | Python FastAPI + Uvicorn               | 0.115            |
-| **AI 模型**    | 通义千问 Qwen-Plus (DashScope API)     | -                |
-| **向量数据库** | ChromaDB (本地)                        | ≥0.5.23         |
-| **3D 引擎**    | Three.js                               | v0.170           |
-| **前端框架**   | Vue3 + Vite                            | Vue 3.4 / Vite 6 |
-| **图表库**     | ECharts                                | 5.5              |
-| **MQTT 库**    | paho-mqtt (Python) / mqtt.js (Browser) | 1.6.1 / 5.10     |
+| 层                   | 技术                                         | 版本             |
+| -------------------- | -------------------------------------------- | ---------------- |
+| **硬件主控**   | ESP32-S3 (行空板 K10) MicroPython            | v1.28            |
+| **传感器通信** | RS485 Modbus RTU, CRC16                      | 9600bps          |
+| **消息中间件** | EMQX MQTT Broker                             | latest           |
+| **后端框架**   | Python FastAPI + Uvicorn                     | 0.115            |
+| **AI 模型**    | DeepSeek-V3.1（aiping.cn，OpenAI 兼容接口，可配置切换） | -        |
+| **Embedding**  | Qwen3-Embedding-0.6B（RAG 向量化）           | 1024 维          |
+| **向量数据库** | ChromaDB (本地)                              | ≥0.5.23          |
+| **持久化**     | SQLite（WAL 模式 + 线程安全写入）            | 内置             |
+| **3D 引擎**    | Three.js                                     | v0.170           |
+| **前端框架**   | Vue3 + Vite                                  | Vue 3.4 / Vite 6 |
+| **图表库**     | ECharts                                      | 5.5              |
+| **MQTT 库**    | paho-mqtt (Python) / mqtt.js (Browser)       | 1.6.1 / 5.10     |
+
+> LLM 与 Embedding 均通过 `.env` 配置化（`LLM_BASE_URL` / `LLM_API_KEY` / `LLM_MODEL` / `EMBEDDING_MODEL`），
+> 换模型只改配置不改代码。
 
 ---
 
@@ -103,11 +115,12 @@
 | **Python 3.12** | 后端运行环境 |
 | **Node.js 18+** | 前端运行环境 |
 | **EMQX**        | Docker       |
+| **LLM API Key** | 任意 OpenAI 兼容接口（大赛用 aiping.cn） |
 
 ### 1. 克隆项目
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/ye-f-y/AbyssSentinel.git
 cd AbyssSentinel
 ```
 
@@ -116,8 +129,6 @@ cd AbyssSentinel
 ```bash
 # Docker（推荐）
 docker run -d --name emqx -p 1883:1883 -p 8083:8083 -p 18083:18083 emqx/emqx:latest
-
-# Windows 安装包：开始菜单启动 EMQX
 ```
 
 访问 http://localhost:18083 确认 Dashboard 可打开（默认账号 `admin`，密码 `public`）。
@@ -132,14 +143,24 @@ python -m venv venv
 .\venv\Scripts\activate
 pip install -r requirement.txt
 
-# 配置通义千问 API Key
-# 编辑 backend/.env，填入: DASHSCOPE_API_KEY=sk-xxxxxxxx
+# 配置 API Key（仅首次）
+copy .env.example .env
+# 编辑 .env，填入你自己的 LLM_API_KEY / LLM_BASE_URL / LLM_MODEL
 
-# 构建国标知识库（仅首次，约 30 秒）
+# 构建国标知识库（仅首次，需联网调用 embedding 接口）
 python rag/build_index.py
 
 # 启动后端
 python main.py
+```
+
+看到以下输出即启动成功：
+
+```
+✅ 持久化数据库就绪: ...\backend\data\sentinel.db
+知识库加载成功，共 255 条
+AI推演模型: DeepSeek-V3.1 @ https://aiping.cn/api/v1
+MQTT已连接: 127.0.0.1
 ```
 
 ### 4. 启动前端
@@ -156,10 +177,10 @@ npm run dev
 
 打开浏览器访问 **http://localhost:5173**。
 
-### 5. 验证全链路
+### 5. 验证全链路（无需硬件）
 
 ```powershell
-# 无需硬件——运行 MQTT 灾害链模拟注入器
+# 运行 MQTT 灾害链模拟注入器（与真实传感器走完全相同的协议和数据格式）
 cd ..
 python hardware/test_inject.py
 
@@ -170,6 +191,18 @@ python hardware/test_inject.py --stage critical
 python hardware/test_inject.py --loop
 ```
 
+注入过程中可观察：大屏 3D 场景联动（天空变暗→暴雨→积水→泵站排水）、AI 推演终端 5 段结构化输出、风险等级四色变化。
+
+### 6. 查看预警审计链（AI 做过什么决策，全程可追溯）
+
+| API                                  | 内容                             |
+| ------------------------------------ | -------------------------------- |
+| `GET /api/stats/summary`             | 总记录数 / 今日预警事件 / 历史最高风险等级 |
+| `GET /api/history/events`            | 风险等级变化事件链（含触发原因与传感器快照） |
+| `GET /api/history/analyses`          | AI 每次推演的全文和国标引用        |
+| `GET /api/history/commands`          | AI 下发过的排水指令审计           |
+| `GET /api/history/sensors?hours=24`  | 传感器时序历史（降采样）          |
+
 ---
 
 ## 📁 项目结构
@@ -177,16 +210,17 @@ python hardware/test_inject.py --loop
 ```
 AbyssSentinel/
 ├── README.md              ← 本文件
+├── RUN.md                 ← 运行手册（启动/演示/排障）
 │
 ├── backend/               ← Python 后端（FastAPI + MQTT + AI）
-│   ├── main.py            ← 入口：启动 FastAPI + MQTT
-│   ├── .env               ← API Key 配置
-│   ├── .env.example       ← 环境变量模板
+│   ├── main.py            ← 入口：启动 FastAPI + MQTT + 数据库
+│   ├── .env.example       ← 环境变量模板（复制为 .env 使用）
 │   ├── requirement.txt    ← Python 依赖清单
 │   ├── core/
-│   │   ├── rule_engine.py ← 规则引擎（12 条阈值规则，毫秒判定）
+│   │   ├── rule_engine.py ← 规则引擎（毫秒级阈值判定）
 │   │   ├── agent.py       ← AI 推演核心（5 段结构 + RAG + Function Calling）
-│   │   └── mqtt_client.py ← MQTT 通信（收发 + 异步推演）
+│   │   ├── database.py    ← SQLite 持久化（4 张表 + 预警审计链）
+│   │   └── mqtt_client.py ← MQTT 通信（收发 + 异步推演 + 入库钩子）
 │   └── rag/
 │       ├── build_index.py ← 知识库构建（扫描版 PDF 检测 + 预置条款）
 │       ├── retriever.py   ← ChromaDB 向量检索
@@ -203,7 +237,7 @@ AbyssSentinel/
 │       │   ├── dataStore.js  ← 全局数据中心（reactive）
 │       │   └── mqttClient.js ← MQTT.js 浏览器连接
 │       └── components/
-│           ├── AbyssScene.vue   ← 3D 下凹立交城市（~1900 行，Three.js）
+│           ├── AbyssScene.vue   ← 3D 下凹立交城市（Three.js）
 │           ├── SensorPanel.vue  ← 左侧传感器面板
 │           └── AIConsole.vue    ← 右侧 AI 推演终端
 │
@@ -327,6 +361,12 @@ python -m mpremote connect COM17 cp hardware/main.py :main.py
 
 **解决**：锁定 `paho-mqtt==1.6.1`。
 
+### 5. Windows 下 localhost 解析不确定性
+
+**现象**：本机 Docker EMQX 存在 IPv4（docker backend）/ IPv6（wslrelay）两条转发通路，`localhost` 解析结果不确定，偶发连不上或连错通路。
+
+**解决**：`.env` 中固定 `MQTT_BROKER=127.0.0.1`（已内置）；前端如遇大屏不联动，将 `mqttClient.js` 中的 `ws://localhost:8083/mqtt` 改为 `ws://127.0.0.1:8083/mqtt`。
+
 ---
 
 ## 📋 MQTT 频道定义
@@ -348,3 +388,30 @@ python -m mpremote connect COM17 cp hardware/main.py :main.py
 - **字体**：Orbitron（英文标题）+ Consolas（等宽数据）+ Microsoft YaHei（中文）
 
 ---
+
+## 🗄️ 预警审计链（数据持久化）
+
+每次灾害链推演的全过程自动写入 SQLite（`backend/data/sentinel.db`）：
+
+```
+sensor_readings ──→ risk_events ──→ ai_analyses ──→ control_commands
+  传感器时序数据     风险等级事件      AI推演全文+国标引用   指令执行审计
+```
+
+- 回答评审/业主最关心的问题：**"AI 做过什么决策？依据是什么？"** —— 全程可追溯
+- 数据支撑后续的阈值自学习、What-if 推演、预警复盘报告
+- 线程安全写入（MQTT 线程 + AI 异步线程），WAL 模式提升读写并发
+
+---
+
+## 📞 联系方式
+
+如有问题，请提交 Issue 或联系项目维护者。
+
+---
+
+<p align="center">
+  <strong>ABYSS SENTINEL · 深渊哨兵</strong>
+  <br>
+  <em>不等灾害发生，提前预防干预 🛡️</em>
+</p>
