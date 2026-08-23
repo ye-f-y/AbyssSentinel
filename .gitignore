@@ -1,0 +1,29 @@
+# ===== 密钥（绝不上传！）=====
+backend/.env
+*.env
+!.env.example
+
+# ===== Python =====
+backend/venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# ===== 数据库与向量库（本地运行时生成）=====
+backend/data/
+backend/rag/db/
+
+# ===== 前端 =====
+frontend/node_modules/
+frontend/dist/
+
+# ===== 开发日志（仅本地保留，不上传）=====
+devlog/
+
+# ===== IDE / 系统杂项 =====
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log

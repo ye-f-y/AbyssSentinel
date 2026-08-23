@@ -1,0 +1,8 @@
+fastapi==0.115.0
+uvicorn==0.30.0
+paho-mqtt==1.6.1
+openai==1.50.0
+chromadb>=0.5.23
+pymupdf==1.24.0
+dashscope==1.20.0
+python-dotenv==1.0.1
