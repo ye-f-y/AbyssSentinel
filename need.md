@@ -17,6 +17,7 @@
 >   - MAX3485 3.3V兼容模块已订购
 >   - 临时方案C：PC USB-RS485桥接器 `hardware/pc_bridge.py`
 > - **MQTT模拟注入器**：`hardware/test_inject.py` — 5阶段灾害链演示
+> - **AI 模型**：DeepSeek-V3.1 @ aiping.cn（2026-08-22 迁移，深圳黑客松大赛指定API）；本文下方"通义千问/DashScope"相关描述为历史记录
 > - **最新文档**：见 [docs/](docs/) 目录与 [devlog/](devlog/) 开发日志
 >
 > 以下为原始需求内容，部分细节可能已与最新实现不符。

@@ -7,11 +7,14 @@
 | 硬件 | ESP32-S3 + RS485 Modbus | 气象传感器 + 土壤传感器并联 |
 | 消息 | EMQX (本地) MQTT | 4个Topic频道 |
 | 后端 | Python 3.12 + FastAPI | 规则引擎 + AI Agent + RAG |
-| AI | 通义千问 Qwen-Plus | 阿里云API，Function Calling |
+| AI | DeepSeek-V3.1 | aiping.cn API（OpenAI兼容），Function Calling |
+| Embedding | Qwen3-Embedding-0.6B | RAG向量化（aiping.cn API，1024维） |
 | 向量库 | ChromaDB (本地) | 国标规范检索 |
 | 3D引擎 | Three.js v0.170 | 下凹立交桥城市数字孪生场景（`AbyssScene.vue`） |
 | 前端 | Vue3 + Three.js + ECharts | 数字孪生大屏 + 图表 + MQTT.js |
 | 构建 | Vite 6 | 前端开发服务器 |
+
+> 注：LLM 与 Embedding 通过 `backend/.env` 配置化（`LLM_BASE_URL` / `LLM_API_KEY` / `LLM_MODEL` / `EMBEDDING_MODEL`），换模型只改配置不改代码。备用：通义千问 qwen-plus @ dashscope。切换 EMBEDDING_MODEL 后必须运行 `python rag/build_index.py` 重建知识库（向量空间须一致）。
 
 > 注：项目早期使用 Cesium.js 3D地球，已于 2026-06-26 替换为 Three.js 下凹立交城市场景（`AbyssScene.vue`）。
 > 2026-08-22 清理：`CesiumGlobe.vue`、旧版 `ThreeScene.vue`、根目录原型文件（`abyss-sentinel.html`、`3dcity.md`）已删除；`cesium` 与 `vite-plugin-cesium` 依赖已从 package.json 移除。
